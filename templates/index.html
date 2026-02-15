@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ART UR PICTURE - Image to Art Converter</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: #fff;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 40px 0;
+        }
+
+        .logo {
+            font-size: 3rem;
+            font-weight: 700;
+            background: linear-gradient(45deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { filter: drop-shadow(0 0 10px rgba(255, 107, 107, 0.5)); }
+            to { filter: drop-shadow(0 0 20px rgba(72, 219, 251, 0.5)); }
+        }
+
+        .tagline {
+            font-size: 1.1rem;
+            color: #a0a0a0;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-top: 40px;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .upload-section, .result-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #48dbfb;
+        }
+
+        .upload-area {
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-area:hover {
+            border-color: #48dbfb;
+            background: rgba(72, 219, 251, 0.1);
+        }
+
+        .upload-area.dragover {
+            border-color: #ff6b6b;
+            background: rgba(255, 107, 107, 0.1);
+        }
+
+        .upload-icon {
+            font-size: 4rem;
+            margin-bottom: 15px;
+        }
+
+        .upload-text {
+            font-size: 1.1rem;
+            color: #a0a0a0;
+        }
+
+        .upload-text span {
+            color: #48dbfb;
+            font-weight: 600;
+        }
+
+        #imageInput {
+            display: none;
+        }
+
+        .preview-image {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .style-selection {
+            margin-top: 30px;
+        }
+
+        .style-title {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: #feca57;
+        }
+
+        .style-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .style-option {
+            position: relative;
+        }
+
+        .style-option input {
+            display: none;
+        }
+
+        .style-card {
+            display: block;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .style-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .style-option input:checked + .style-card {
+            border-color: #48dbfb;
+            background: rgba(72, 219, 251, 0.2);
+            box-shadow: 0 0 20px rgba(72, 219, 251, 0.3);
+        }
+
+        .style-icon {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .style-name {
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .convert-btn {
+            width: 100%;
+            padding: 18px;
+            margin-top: 30px;
+            background: linear-gradient(45deg, #ff6b6b, #feca57);
+            border: none;
+            border-radius: 12px;
+            color: #1a1a2e;
+            font-size: 1.2rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .convert-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 10px 30px rgba(255, 107, 107, 0.4);
+        }
+
+        .convert-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .result-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 300px;
+            color: #a0a0a0;
+        }
+
+        .result-placeholder .icon {
+            font-size: 5rem;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        .result-image {
+            max-width: 100%;
+            max-height: 400px;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .result-images {
+            display: none;
+            gap: 15px;
+        }
+
+        .result-images.show {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .result-images img {
+            width: 100%;
+            border-radius: 10px;
+            transition: transform 0.3s ease;
+        }
+
+        .result-images img:hover {
+            transform: scale(1.05);
+        }
+
+        .result-label {
+            text-align: center;
+            margin-top: 10px;
+            color: #a0a0a0;
+            font-size: 0.9rem;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top: 4px solid #48dbfb;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: #48dbfb;
+            font-size: 1.1rem;
+        }
+
+        footer {
+            text-align: center;
+            padding: 40px 0;
+            margin-top: 60px;
+            color: #a0a0a0;
+        }
+
+        .download-btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background: linear-gradient(45deg, #48dbfb, #ff9ff3);
+            color: #1a1a2e;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(72, 219, 251, 0.4);
+        }
+
+        .error-message {
+            background: rgba(255, 107, 107, 0.2);
+            border: 1px solid #ff6b6b;
+            color: #ff6b6b;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1 class="logo">🎨 ART UR PICTURE</h1>
+            <p class="tagline">Transform your photos into stunning artwork</p>
+        </header>
+
+        <div class="main-content">
+            <div class="upload-section">
+                <h2 class="section-title">📤 Upload Your Image</h2>
+                
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">🖼️</div>
+                    <p class="upload-text">Drag & drop your image here or <span>browse</span></p>
+                    <p style="margin-top: 10px; font-size: 0.9rem; color: #666;">Supports: PNG, JPG, JPEG, GIF, BMP, WEBP</p>
+                    <input type="file" id="imageInput" accept="image/*">
+                    <img id="previewImage" class="preview-image" alt="Preview">
+                </div>
+
+                <div class="style-selection">
+                    <h3 class="style-title">🎭 Choose Art Style</h3>
+                    <div class="style-options">
+                        <label class="style-option">
+                            <input type="radio" name="style" value="modern_art" checked>
+                            <div class="style-card">
+                                <div class="style-icon">🌟</div>
+                                <div class="style-name">Modern Art</div>
+                            </div>
+                        </label>
+                        <label class="style-option">
+                            <input type="radio" name="style" value="oil_painting">
+                            <div class="style-card">
+                                <div class="style-icon">🖌️</div>
+                                <div class="style-name">Oil Painting</div>
+                            </div>
+                        </label>
+                        <label class="style-option">
+                            <input type="radio" name="style" value="pencil_sketch">
+                            <div class="style-card">
+                                <div class="style-icon">✏️</div>
+                                <div class="style-name">Pencil Sketch</div>
+                            </div>
+                        </label>
+                        <label class="style-option">
+                            <input type="radio" name="style" value="anime">
+                            <div class="style-card">
+                                <div class="style-icon">🎌</div>
+                                <div class="style-name">Anime</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <button class="convert-btn" id="convertBtn" onclick="convertImage()">
+                    🚀 Convert to Art
+                </button>
+
+                <div class="error-message" id="errorMessage"></div>
+            </div>
+
+            <div class="result-section">
+                <h2 class="section-title">🎉 Your Artwork</h2>
+                
+                <div class="result-placeholder" id="resultPlaceholder">
+                    <div class="icon">🎨</div>
+                    <p>Your artwork will appear here</p>
+                </div>
+
+                <div class="loading" id="loading">
+                    <div class="loading-spinner"></div>
+                    <p class="loading-text">Creating your masterpiece...</p>
+                </div>
+
+                <div class="result-images" id="resultImages">
+                    <div>
+                        <img id="originalImage" src="" alt="Original">
+                        <p class="result-label">Original</p>
+                    </div>
+                    <div>
+                        <img id="resultImage" src="" alt="Artwork">
+                        <p class="result-label">Artwork</p>
+                        <a id="downloadBtn" class="download-btn" href="" download="artwork.png">
+                            💾 Download
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>Made with ❤️ by ART UR PICTURE</p>
+        </footer>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const imageInput = document.getElementById('imageInput');
+        const previewImage = document.getElementById('previewImage');
+        const convertBtn = document.getElementById('convertBtn');
+        const loading = document.getElementById('loading');
+        const resultPlaceholder = document.getElementById('resultPlaceholder');
+        const resultImages = document.getElementById('resultImages');
+        const originalImage = document.getElementById('originalImage');
+        const resultImage = document.getElementById('resultImage');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const errorMessage = document.getElementById('errorMessage');
+
+        // Handle click to browse
+        uploadArea.addEventListener('click', () => imageInput.click());
+
+        // Handle file selection
+        imageInput.addEventListener('change', handleFileSelect);
+
+        // Handle drag and drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                imageInput.files = files;
+                handleFileSelect();
+            }
+        });
+
+        function handleFileSelect() {
+            const file = imageInput.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    previewImage.src = e.target.result;
+                    previewImage.style.display = 'block';
+                    document.querySelector('.upload-icon').style.display = 'none';
+                    document.querySelector('.upload-text').style.display = 'none';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        async function convertImage() {
+            const file = imageInput.files[0];
+            if (!file) {
+                showError('Please select an image first!');
+                return;
+            }
+
+            const style = document.querySelector('input[name="style"]:checked').value;
+            
+            // Show loading
+            hideError();
+            resultPlaceholder.style.display = 'none';
+            resultImages.style.display = 'none';
+            loading.style.display = 'block';
+            convertBtn.disabled = true;
+
+            const formData = new FormData();
+            formData.append('image', file);
+            formData.append('style', style);
+
+            try {
+                const response = await fetch('/convert', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Show results
+                    loading.style.display = 'none';
+                    resultImages.style.display = 'grid';
+                    resultImages.classList.add('show');
+                    
+                    // Add timestamp to prevent caching
+                    const timestamp = new Date().getTime();
+                    originalImage.src = data.original + '?t=' + timestamp;
+                    resultImage.src = data.result + '?t=' + timestamp;
+                    downloadBtn.href = data.result + '?t=' + timestamp;
+                } else {
+                    showError(data.error || 'Failed to convert image');
+                    loading.style.display = 'none';
+                    resultPlaceholder.style.display = 'flex';
+                }
+            } catch (error) {
+                showError('An error occurred. Please try again.');
+                loading.style.display = 'none';
+                resultPlaceholder.style.display = 'flex';
+            }
+
+            convertBtn.disabled = false;
+        }
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+        }
+
+        function hideError() {
+            errorMessage.style.display = 'none';
+        }
+    </script>
+</body>
+</html>
