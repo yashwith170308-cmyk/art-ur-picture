@@ -2,13 +2,8 @@ from flask import Flask, render_template, request, jsonify, send_file
 import cv2
 import numpy as np
 import io
-from flask import send_from_directory
 
 app = Flask(__name__)
-
-@app.route('/google4d15dc0c50f7c6c5.html')
-def google_verification():
-    return send_from_directory('static', 'google4d15dc0c50f7c6c5.html')
 
 
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
