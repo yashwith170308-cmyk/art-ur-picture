@@ -94,7 +94,7 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 @app.route('/convert', methods=['POST'])
 def convert():
-    try:
+
         if 'image' not in request.files:
             return "No image uploaded", 400
 
@@ -126,16 +126,22 @@ def convert():
         else:
             result = image
 
-        # Resize large images (prevents crash)
-        result = cv2.resize(result, (800, 800))
+# Save result image
+        result_filename = "result_" + file.filename
+        result_path = os.path.join(app.config["UPLOAD_FOLDER"], result_filename)
+        cv2.imwrite(result_path, result)
 
-        output_path = os.path.join(app.config["UPLOAD_FOLDER"], "artwork.png")
-        cv2.imwrite(output_path, result)
 
-        return send_file(output_path, as_attachment=True)
+        return jsonify({
+            "original": "/" + filepath,
+            "result": "/" + result_path
+        })
 
-    except Exception as e:
-        return f"Error: {str(e)}", 500
+
+
+
+
+
 
 
 @app.errorhandler(413)
