@@ -99,6 +99,10 @@ def convert():
             return "No image uploaded", 400
 
         file = request.files['image']
+        # Limit file size to 2MB
+        if request.content_length and request.content_length > 2 * 1024 * 1024:
+            return "File too large (Max 2MB)", 400
+
 
         if file.filename == '':
             return "No image selected", 400
@@ -112,6 +116,12 @@ def convert():
 
         # Read image
         image = cv2.imread(filepath)
+                # Resize to reduce memory usage
+        height, width = image.shape[:2]
+
+        if width > 1000 or height > 1000:
+            image = cv2.resize(image, (800, 800))
+
 
         style = request.form.get('style', 'modern_art')
 
@@ -130,6 +140,9 @@ def convert():
         result_filename = "result_" + file.filename
         result_path = os.path.join(app.config["UPLOAD_FOLDER"], result_filename)
         cv2.imwrite(result_path, result)
+        del image
+        del result
+
 
 
         return jsonify({
