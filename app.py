@@ -84,54 +84,59 @@ def process_image_in_memory(image_bytes, style):
 def index():
     return render_template('index.html')
 
+
+import os
+from flask import send_file
+
+UPLOAD_FOLDER = "static/uploads"
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+
+
 @app.route('/convert', methods=['POST'])
 def convert():
-    """Process image in memory and return base64 encoded result"""
     try:
-        # Validate image upload
         if 'image' not in request.files:
-            return jsonify({'error': 'No image uploaded'}), 400
-        
+            return "No image uploaded", 400
+
         file = request.files['image']
-        
+
         if file.filename == '':
-            return jsonify({'error': 'No image selected'}), 400
-        
-        # Validate file type
+            return "No image selected", 400
+
         if not allowed_file(file.filename):
-            return jsonify({'error': 'Invalid file type. Allowed: PNG, JPG, JPEG, GIF, BMP, WEBP'}), 400
-        
-        # Get selected style
+            return "Invalid file type", 400
+
+        # Save uploaded file
+        filepath = os.path.join(app.config["UPLOAD_FOLDER"], file.filename)
+        file.save(filepath)
+
+        # Read image
+        image = cv2.imread(filepath)
+
         style = request.form.get('style', 'modern_art')
-        valid_styles = ['pencil_sketch', 'oil_painting', 'modern_art', 'anime']
-        if style not in valid_styles:
-            style = 'modern_art'  # Default to modern_art
-        
-        # Read image in memory - NO DISK STORAGE
-        image_bytes = file.read()
-        
-        # Validate image can be decoded
-        nparr = np.frombuffer(image_bytes, np.uint8)
-        test_image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-        if test_image is None:
-            return jsonify({'error': 'Invalid image file'}), 400
-        
-        # Process image in memory
-        result_bytes = process_image_in_memory(image_bytes, style)
-        
-        if result_bytes is None:
-            return jsonify({'error': 'Failed to process image'}), 500
-        
-        # Return processed image as base64
-        import base64
-        result_base64 = base64.b64encode(result_bytes).decode('utf-8')
-        
-        return jsonify({
-            'result': f"data:image/png;base64,{result_base64}"
-        })
-    
+
+        if style == 'pencil_sketch':
+            result = convert_to_pencil_sketch(image)
+        elif style == 'oil_painting':
+            result = convert_to_oil_painting(image)
+        elif style == 'modern_art':
+            result = convert_to_modern_art(image)
+        elif style == 'anime':
+            result = convert_to_anime(image)
+        else:
+            result = image
+
+        # Resize large images (prevents crash)
+        result = cv2.resize(result, (800, 800))
+
+        output_path = os.path.join(app.config["UPLOAD_FOLDER"], "artwork.png")
+        cv2.imwrite(output_path, result)
+
+        return send_file(output_path, as_attachment=True)
+
     except Exception as e:
-        return jsonify({'error': 'An error occurred while processing your image'}), 500
+        return f"Error: {str(e)}", 500
+
 
 @app.errorhandler(413)
 def request_entity_too_large(error):
