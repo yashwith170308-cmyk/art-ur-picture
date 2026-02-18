@@ -140,10 +140,15 @@ def convert():
         result_filename = "result_" + file.filename
         result_path = os.path.join(app.config["UPLOAD_FOLDER"], result_filename)
         cv2.imwrite(result_path, result)
-        # Prevent large mobile images from crashing server
+        if image is None:
+            return jsonify({"error": "Invalid image file"}), 400
+
+        # Resize large images immediately (IMPORTANT FOR RENDER FREE PLAN)
         h, w = image.shape[:2]
-        if h > 1500 or w > 1500:
-            image = cv2.resize(image, (800, 800))
+        if h > 1200 or w > 1200:
+            scale = 1200 / max(h, w)
+            new_size = (int(w * scale), int(h * scale))
+            image = cv2.resize(image, new_size)
 
         del image
         del result
