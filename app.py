@@ -29,31 +29,18 @@ def convert_to_pencil_sketch(image):
 
 def convert_to_oil_painting(image):
     """Convert image to oil painting style"""
-    result = cv2.bilateralFilter(image, 9, 250, 250)
-    result = cv2.convertScaleAbs(result, alpha=1.2, beta=10)
-    result = cv2.medianBlur(result, 5)
-    return result
+    return cv2.GaussianBlur(image, (15, 15), 0)
 
 def convert_to_modern_art(image):
     """Convert image to modern art style"""
-    result = cv2.edgePreservingFilter(image, flags=cv2.RECURS_FILTER, sigma_s=60, sigma_r=0.4)
-    result = cv2.convertScaleAbs(result, alpha=1.3, beta=5)
-    result = cv2.stylization(result, sigma_s=60, sigma_r=0.6)
-    return result
+    return cv2.applyColorMap(image, cv2.COLORMAP_JET)
 
 def convert_to_anime(image):
     """Convert image to anime style"""
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    edges = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_MEAN_C, 
-                                   cv2.THRESH_BINARY, 9, 5)
-    result = cv2.bilateralFilter(image, 9, 250, 250)
-    result = result.astype(np.float32)
-    result = np.floor(result / 32) * 32
-    result = np.clip(result, 0, 255).astype(np.uint8)
-    edges_colored = cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
-    result = cv2.bitwise_and(result, result, mask=cv2.bitwise_not(edges))
-    result = cv2.bitwise_or(result, edges_colored)
-    return result
+    edges = cv2.Canny(gray, 100, 200)
+    edges = cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
+    return cv2.bitwise_and(image, edges)
 
 def process_image_in_memory(image_bytes, style):
     """Process image entirely in memory - no disk storage"""
@@ -94,14 +81,22 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 @app.route('/convert', methods=['POST'])
 def convert():
+        
+    max_dimension = 900
+    h, w = image.shape[:2]
 
+    if max(h, w) > max_dimension:
+        scale = max_dimension / max(h, w)
+        image = cv2.resize(image, (int(w * scale), int(h * scale)))
+
+
+           
         if 'image' not in request.files:
             return "No image uploaded", 400
 
         file = request.files['image']
-        # Limit file size to 2MB
-        if request.content_length and request.content_length > 2 * 1024 * 1024:
-            return "File too large (Max 2MB)", 400
+    
+        
 
 
         if file.filename == '':
