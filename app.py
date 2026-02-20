@@ -49,7 +49,6 @@ def convert_to_oil_painting(image):
 
 
 def convert_to_modern_art(image):
- def convert_to_modern_art(image):
     # Increase contrast
     lab = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
     l, a, b = cv2.split(lab)
