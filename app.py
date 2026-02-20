@@ -49,25 +49,37 @@ def convert_to_oil_painting(image):
 
 
 def convert_to_modern_art(image):
-    # Increase contrast
-    lab = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
-    l, a, b = cv2.split(lab)
-    l = cv2.equalizeHist(l)
-    lab = cv2.merge((l, a, b))
-    enhanced = cv2.cvtColor(lab, cv2.COLOR_LAB2BGR)
+    try:
+        # Slight contrast boost
+        lab = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
+        l, a, b = cv2.split(lab)
+        l = cv2.equalizeHist(l)
+        lab = cv2.merge((l, a, b))
+        enhanced = cv2.cvtColor(lab, cv2.COLOR_LAB2BGR)
 
-    # Bilateral filter (smooth colors but keep edges)
-    smooth = cv2.bilateralFilter(enhanced, 9, 75, 75)
+        # LIGHT bilateral filter (less blur)
+        smooth = cv2.bilateralFilter(enhanced, 5, 40, 40)
 
-    # Edge detection
-    gray = cv2.cvtColor(smooth, cv2.COLOR_BGR2GRAY)
-    edges = cv2.Canny(gray, 80, 150)
-    edges = cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
+        # Sharpening kernel
+        kernel = np.array([
+            [0, -1, 0],
+            [-1, 5,-1],
+            [0, -1, 0]
+        ])
+        sharpened = cv2.filter2D(smooth, -1, kernel)
 
-    # Combine edges with smooth image
-    modern = cv2.addWeighted(smooth, 0.9, edges, 0.3, 0)
+        # Stronger edges
+        gray = cv2.cvtColor(sharpened, cv2.COLOR_BGR2GRAY)
+        edges = cv2.Canny(gray, 100, 180)
+        edges = cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
 
-    return modern
+        modern = cv2.addWeighted(sharpened, 0.9, edges, 0.4, 0)
+
+        return modern
+
+    except Exception as e:
+        print("Modern art error:", e)
+        return image
 
 def convert_to_anime(image):
     """Convert image to anime style"""
