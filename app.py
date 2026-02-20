@@ -34,11 +34,21 @@ def convert_to_oil_painting(image):
 
 
 def convert_to_modern_art(image):
-    """Convert image to modern art style"""
-  
-    enhanced = cv2.detailEnhance(image, sigma_s=10, sigma_r=0.15)
-    return cv2.applyColorMap(enhanced, cv2.COLORMAP_TURBO)
+    # Increase color vibrance
+    image = cv2.bilateralFilter(image, 9, 75, 75)
 
+    # Boost contrast
+    lab = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
+    l, a, b = cv2.split(lab)
+
+    l = cv2.equalizeHist(l)
+    lab = cv2.merge((l, a, b))
+    image = cv2.cvtColor(lab, cv2.COLOR_LAB2BGR)
+
+    # Stylization effect (real painter feel)
+    image = cv2.stylization(image, sigma_s=100, sigma_r=0.25)
+
+    return image
 
 def convert_to_anime(image):
     """Convert image to anime style"""
