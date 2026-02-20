@@ -134,6 +134,7 @@ def convert():
             return "No image uploaded", 400
 
         file = request.files['image']
+        print("Received file:", file.filename)
     
         
 
@@ -148,6 +149,7 @@ def convert():
         unique_name = f"{int(time.time())}_{uuid.uuid4().hex}.jpg"
         filepath = os.path.join(app.config["UPLOAD_FOLDER"], unique_name)
         file.save(filepath)
+        print("Saved at:", filepath)
 
         # Read image
         image = cv2.imread(filepath)
