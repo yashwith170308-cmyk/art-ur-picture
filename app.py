@@ -75,7 +75,11 @@ def index():
 import os
 from flask import send_file
 
+
 UPLOAD_FOLDER = "static/uploads"
+
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 
