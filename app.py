@@ -3,8 +3,22 @@ import cv2
 import numpy as np
 import os
 import io
+import uuid
+import time
+import logging
+logging.basicConfig(level=logging.INFO)
+
+def cleanup_old_files(folder, max_age_seconds=3600):
+    now = time.time()
+    for filename in os.listdir(folder):
+        file_path = os.path.join(folder, filename)
+        if os.path.isfile(file_path):
+            file_age = now - os.path.getmtime(file_path)
+            if file_age > max_age_seconds:
+                os.remove(file_path)
 
 app = Flask(__name__)
+app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024  # 5MB limit
 
 
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
@@ -111,6 +125,8 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 @app.route('/convert', methods=['POST'])
 def convert():
+        cleanup_old_files(app.config["UPLOAD_FOLDER"])
+        logging.info("Image processing started")
         
 
            
@@ -129,7 +145,8 @@ def convert():
             return "Invalid file type", 400
 
         # Save uploaded file
-        filepath = os.path.join(app.config["UPLOAD_FOLDER"], file.filename)
+        unique_name = f"{int(time.time())}_{uuid.uuid4().hex}.jpg"
+        filepath = os.path.join(app.config["UPLOAD_FOLDER"], unique_name)
         file.save(filepath)
 
         # Read image
