@@ -50,31 +50,28 @@ def convert_to_oil_painting(image):
 
 def convert_to_modern_art(image):
     try:
-        # Increase saturation
-        hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-        h, s, v = cv2.split(hsv)
+        # Resize smaller copy for color clustering
+        Z = image.reshape((-1, 3))
+        Z = np.float32(Z)
 
-        s = cv2.multiply(s, 1.3)  # boost saturation
-        s = np.clip(s, 0, 255)
+        # K-means color quantization
+        K = 8  # fewer colors = more paint-like
+        criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 20, 1.0)
+        _, label, center = cv2.kmeans(Z, K, None, criteria, 10, cv2.KMEANS_RANDOM_CENTERS)
 
-        hsv = cv2.merge([h, s, v])
-        saturated = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
+        center = np.uint8(center)
+        quantized = center[label.flatten()]
+        quantized = quantized.reshape((image.shape))
 
-        # Slight contrast boost
-        contrast = cv2.convertScaleAbs(saturated, alpha=1.2, beta=10)
+        # Edge detection
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        edges = cv2.Canny(gray, 100, 200)
+        edges = cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
 
-        # Light bilateral filter (preserve edges)
-        smooth = cv2.bilateralFilter(contrast, 5, 40, 40)
+        # Combine edges with flat colors
+        modern = cv2.addWeighted(quantized, 0.9, edges, 0.4, 0)
 
-        # Sharpen
-        kernel = np.array([
-            [0, -1, 0],
-            [-1, 5,-1],
-            [0, -1, 0]
-        ])
-        sharpened = cv2.filter2D(smooth, -1, kernel)
-
-        return sharpened
+        return modern
 
     except Exception as e:
         print("Modern art error:", e)
