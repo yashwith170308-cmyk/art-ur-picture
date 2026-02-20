@@ -49,31 +49,26 @@ def convert_to_oil_painting(image):
 
 
 def convert_to_modern_art(image):
-    # Light smoothing (not heavy blur)
-    image = cv2.bilateralFilter(image, 5, 50, 50)
-
-    # Improve contrast using CLAHE
+ def convert_to_modern_art(image):
+    # Increase contrast
     lab = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
     l, a, b = cv2.split(lab)
-
-    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
-    l = clahe.apply(l)
-
+    l = cv2.equalizeHist(l)
     lab = cv2.merge((l, a, b))
-    image = cv2.cvtColor(lab, cv2.COLOR_LAB2BGR)
+    enhanced = cv2.cvtColor(lab, cv2.COLOR_LAB2BGR)
 
-    # Mild stylization (reduced blur)
-    image = cv2.stylization(image, sigma_s=50, sigma_r=0.12)
+    # Bilateral filter (smooth colors but keep edges)
+    smooth = cv2.bilateralFilter(enhanced, 9, 75, 75)
 
-    # Strong sharpening for clarity
-    sharpen_kernel = np.array([
-        [0, -1, 0],
-        [-1, 5.5, -1],
-        [0, -1, 0]
-    ])
-    image = cv2.filter2D(image, -1, sharpen_kernel)
+    # Edge detection
+    gray = cv2.cvtColor(smooth, cv2.COLOR_BGR2GRAY)
+    edges = cv2.Canny(gray, 80, 150)
+    edges = cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
 
-    return image
+    # Combine edges with smooth image
+    modern = cv2.addWeighted(smooth, 0.9, edges, 0.3, 0)
+
+    return modern
 
 def convert_to_anime(image):
     """Convert image to anime style"""
@@ -194,12 +189,6 @@ def convert():
         if image is None:
             return jsonify({"error": "Invalid image file"}), 400
 
-        # Resize large images immediately (IMPORTANT FOR RENDER FREE PLAN)
-        h, w = image.shape[:2]
-        if h > 1200 or w > 1200:
-            scale = 1200 / max(h, w)
-            new_size = (int(w * scale), int(h * scale))
-            image = cv2.resize(image, new_size)
 
         del image
         del result
