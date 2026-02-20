@@ -20,20 +20,25 @@ def allowed_file(filename):
 
 def convert_to_pencil_sketch(image):
     """Convert image to pencil sketch style"""
+  
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    inverted = 255 - gray
-    blurred = cv2.GaussianBlur(inverted, (21, 21), 0)
-    inverted_blur = 255 - blurred
-    sketch = cv2.divide(gray, inverted_blur, scale=256.0)
+    blur = cv2.GaussianBlur(gray, (21, 21), 0)
+    sketch = cv2.divide(gray, blur, scale=256)
     return cv2.cvtColor(sketch, cv2.COLOR_GRAY2BGR)
+
 
 def convert_to_oil_painting(image):
     """Convert image to oil painting style"""
-    return cv2.GaussianBlur(image, (15, 15), 0)
+   
+    return cv2.bilateralFilter(image, d=9, sigmaColor=75, sigmaSpace=75)
+
 
 def convert_to_modern_art(image):
     """Convert image to modern art style"""
-    return cv2.applyColorMap(image, cv2.COLORMAP_JET)
+  
+    enhanced = cv2.detailEnhance(image, sigma_s=10, sigma_r=0.15)
+    return cv2.applyColorMap(enhanced, cv2.COLORMAP_TURBO)
+
 
 def convert_to_anime(image):
     """Convert image to anime style"""
@@ -113,14 +118,21 @@ def convert():
         if image is None:
             return jsonify({"error": "Failed to read image"}), 400
 
-        # Resize to reduce memory usage
+            # Smart high-quality resize
+        max_size = 1100
+
         height, width = image.shape[:2]
 
-        if width > 1000 or height > 1000:
-            image = cv2.resize(image, (800, 800))
-                
-                # Resize to reduce memory usage
-      
+        if max(height, width) > max_size:
+            scale = max_size / max(height, width)
+            new_width = int(width * scale)
+            new_height = int(height * scale)
+
+            image = cv2.resize(
+                image,
+                (new_width, new_height),
+                interpolation=cv2.INTER_LANCZOS4
+            )
 
         style = request.form.get('style', 'modern_art')
 
