@@ -32,28 +32,26 @@ def convert_to_oil_painting(image):
    
     return cv2.bilateralFilter(image, d=9, sigmaColor=75, sigmaSpace=75)
 
-
 def convert_to_modern_art(image):
-    # Smooth but keep edges
-    image = cv2.bilateralFilter(image, 9, 75, 75)
+    # Preserve detail with gentle smoothing
+    image = cv2.bilateralFilter(image, 7, 60, 60)
 
-    # Increase contrast using LAB
+    # Improve contrast with CLAHE
     lab = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
     l, a, b = cv2.split(lab)
 
-    # CLAHE instead of equalizeHist (better + clearer)
-    clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8,8))
+    clahe = cv2.createCLAHE(clipLimit=2.5, tileGridSize=(8,8))
     l = clahe.apply(l)
 
     lab = cv2.merge((l, a, b))
     image = cv2.cvtColor(lab, cv2.COLOR_LAB2BGR)
 
-    # Artistic stylization (lighter strength)
-    image = cv2.stylization(image, sigma_s=80, sigma_r=0.20)
+    # Very mild stylization (reduced strength)
+    image = cv2.stylization(image, sigma_s=60, sigma_r=0.15)
 
-    # Final sharpening step (THIS makes it clearer 🔥)
+    # Light sharpening (not aggressive)
     kernel = np.array([[0,-1,0],
-                       [-1,5,-1],
+                       [-1,4.5,-1],
                        [0,-1,0]])
     image = cv2.filter2D(image, -1, kernel)
 
