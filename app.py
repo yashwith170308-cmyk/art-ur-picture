@@ -82,13 +82,6 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 @app.route('/convert', methods=['POST'])
 def convert():
         
-    max_dimension = 900
-    h, w = image.shape[:2]
-
-    if max(h, w) > max_dimension:
-        scale = max_dimension / max(h, w)
-        image = cv2.resize(image, (int(w * scale), int(h * scale)))
-
 
            
         if 'image' not in request.files:
@@ -111,12 +104,19 @@ def convert():
 
         # Read image
         image = cv2.imread(filepath)
-                # Resize to reduce memory usage
+        
+
+        if image is None:
+            return jsonify({"error": "Failed to read image"}), 400
+
+        # Resize to reduce memory usage
         height, width = image.shape[:2]
 
         if width > 1000 or height > 1000:
             image = cv2.resize(image, (800, 800))
-
+                
+                # Resize to reduce memory usage
+      
 
         style = request.form.get('style', 'modern_art')
 
@@ -154,12 +154,6 @@ def convert():
             "original": "/" + filepath,
             "result": "/" + result_path
         })
-
-
-
-
-
-
 
 
 @app.errorhandler(413)
